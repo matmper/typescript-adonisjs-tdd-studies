@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+
+  # NodeJS
+  ajsadonis:
+    container_name: ajs-nodejs
+    env_file:
+        - .env
+    build:
+      context: .
+      target: development
+      dockerfile: ./Dockerfile
+    command: yarn dev
+    ports:
+      - ${EXTERNAL_PORT:-3333}:${PORT:-3333}
+      - 9229:9229
+    networks:
+      - adonisjs-ts-network
+    volumes:
+      - ./:/usr/src/app
+
+  # DB - MySQL 5.7
+  ajsmysql:
+    container_name: ajs-mysql-57
+    image: mysql:5.7
+    platform: linux/x86_64
+    env_file:
+      - ./.env
+    environment:
+      MYSQL_PORT: ${DB_PORT:-3306}
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+    command:
+      - --explicit_defaults_for_timestamp
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - ${EXTERNAL_DB_PORT:-3306}:${DB_PORT:-3306}
+    networks:
+      - adonisjs-ts-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  adonisjs-ts-network:
